@@ -1,0 +1,71 @@
+-- full path where you install whisper. 
+-- Change it to your path:
+    path = "/home/user/whisper"
+
+-- path to the venv folder. Change it to your venv folder:
+    venvpath = "/.venv" 
+
+-- Output format for generated text file. 
+-- leave this in srt format for importing into REAPER
+    output_format = "srt"
+
+--[[ 
+-- model to use:
+-- name of the Whisper model to use (default: small)
+        Size 	Parameters  English-only model  Multilingual    model 	Required VRAM
+        tiny 	39 M 	    tiny.en 	        tiny 	        ~1 GB 	~32x
+        base 	74 M 	    base.en 	        base 	        ~1 GB 	~16x
+        small 	244 M 	    small.en 	        small 	        ~2 GB 	~6x
+        medium 	769 M 	    medium.en 	        medium 	        ~5 GB 	~2x
+        large 	1550 M 	    N/A 	            large 	        ~10 GB 	1x        --]]
+
+    model = "base.en"
+
+-- language spoken in the audio, specify None to perform language detection 
+-- one of these: af,am,ar,as,az,ba,be,bg,bn,bo,br,bs,ca,cs,cy,da,de,el,en,es,et,eu,fa,fi,fo,fr,gl,gu,ha,haw,he,hi,hr,ht,hu,hy,id,is,it,ja,jw,ka,kk,km,kn,ko,la,lb,ln,lo,lt,lv,mg,mi,mk,ml,mn,mr,ms,mt,my,ne,nl,nn,no,oc,pa,pl,ps,pt,ro,ru,sa,sd,si,sk,sl,sn,so,sq,sr,su,sv,sw,ta,te,tg,th,tk,tl,tr,tt,uk,ur,uz,vi,yi,yo,yue,zh
+-- or these: Afrikaans,Albanian,Amharic,Arabic,Armenian,Assamese,Azerbaijani,Bashkir,Basque,Belarusian,Bengali,Bosnian,Breton,Bulgarian,Burmese,Cantonese,Castilian,Catalan,Chinese,Croatian,Czech,Danish,Dutch,English,Estonian,Faroese,Finnish,Flemish,French,Galician,Georgian,German,Greek,Gujarati,Haitian,Haitian Creole,Hausa,Hawaiian,Hebrew,Hindi,Hungarian,Icelandic,Indonesian,Italian,Japanese,Javanese,Kannada,Kazakh,Khmer,Korean,Lao,Latin,Latvian,Letzeburgesch,Lingala,Lithuanian,Luxembourgish,Macedonian,Malagasy,Malay,Malayalam,Maltese,Mandarin,Maori,Marathi,Moldavian,Moldovan,Mongolian,Myanmar,Nepali,Norwegian,Nynorsk,Occitan,Panjabi,Pashto,Persian,Polish,Portuguese,Punjabi,Pushto,Romanian,Russian,Sanskrit,Serbian,Shona,Sindhi,Sinhala,Sinhalese,Slovak,Slovenian,Somali,Spanish,Sundanese,Swahili,Swedish,Tagalog,Tajik,Tamil,Tatar,Telugu,Thai,Tibetan,Turkish,Turkmen,Ukrainian,Urdu,Uzbek,Valencian,Vietnamese,Welsh,Yiddish,Yoruba
+-- (default: "None")
+    language = "English"
+
+-- (experimental) extract word-level timestamps and refine the results 
+-- based on them (default: "False")
+    word_timestamps = "True"
+
+-- underline each word as it is spoken in srt and vtt 
+-- (requires word_timestamps "True") 
+-- (default: "False")
+    highlight_words = "False"
+
+-- the maximum number of characters in a line before breaking the line 
+-- suggestion of 37 characters: https://www.bbc.co.uk/accessibility/forproducts/guides/subtitles/#Line-length
+-- (requires word_timestamps "True") 
+-- (default: "None")
+    max_line_width = 37
+
+-- the maximum number of lines in a segment 
+-- suggestion of 2 lines max: https://www.bbc.co.uk/accessibility/forproducts/guides/subtitles/#Avoid-3-lines-or-more
+-- (requires word_timestamps "True") 
+-- (default: "None")
+    max_line_count = 2
+
+-- no effect with --max_line_width) the maximum number of words in a segment 
+-- (default: "None")
+    max_words_per_line = "None"
+
+-- merge these punctuation symbols with the next word (default: "'“¿([{-)
+-- (requires word_timestamps "True") 
+    prepend_punctuations = ""
+
+-- merge these punctuation symbols with the previous word (default: "'.。,，!！?？:：”)]}、)
+-- (requires word_timestamps "True") 
+    append_punctuations = ""
+
+-- number of threads used by torch for CPU inference; 
+-- (default: 0)
+    threads = 0
+
+
+
+--other options
+-- display internal messages for debugging
+    showdebug = false
