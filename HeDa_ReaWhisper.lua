@@ -2,7 +2,7 @@
 * ReaScript Name: ReaWhisper
 * Author: HeDa
 * Author URI: https://reaper.hector-corcin.com
-* Repository URI: https://github.com//HeDaScripts/ReaWhisper
+* Repository URI: https://github.com/HeDaScripts/ReaWhisper
 * Licence: MIT
 * Version: 0.1.0
 
