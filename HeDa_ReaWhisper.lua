@@ -4,15 +4,7 @@
 * Author URI: https://reaper.hector-corcin.com
 * Repository URI: https://github.com/HeDaScripts/ReaWhisper
 * Licence: MIT
-* Version: 0.1.0
-
-* v0.1.0 (2024-05-17)
-	+ Basic script to run OpenAI Whisper from REAPER.
-	Simple version with manual options from settings.lua.txt file.
-	It launches whisper command to transcribe the audio of a selected item
-	into a srt file, and then import the srt into a track in REAPER. 
-	The track is the next track of the item's track. so you may want to create 
-	an empty track after the track to transcribe first.
+* Version: 0.1.1
 
 --]]
 
@@ -78,9 +70,6 @@ else
 		end
 	end
 end
-
--- whisper executable path
-whisperbin = path..venvpath.."/bin/whisper"
 
 
 function print_debug(text)

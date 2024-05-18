@@ -1,10 +1,7 @@
--- full path where you install whisper. 
--- Change it to your path:
-    path = "/home/user/whisper"
-
--- path to the venv folder. Change it to your venv folder:
-    venvpath = "/.venv" 
-
+-- Full path where whisper executable was installed. 
+-- Change it to your whisper executable. including extension .exe on Windows
+    whisperbin = "/home/user/whisper/.env/bin/whisper"
+ 
 -- Output format for generated text file. 
 -- leave this in srt format for importing into REAPER
     output_format = "srt"

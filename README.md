@@ -11,9 +11,16 @@ inside the Whisper folder, run this:
     
     python -m venv ./.venv
 
-activate the environment:
+activate the environment on Linux and MacOS:
 
     source ./.venv/bin/activate
+
+on windows:
+
+    # In cmd.exe
+    venv\Scripts\activate.bat
+    # In PowerShell
+    venv\Scripts\Activate.ps1
 
 now that you are in this .venv, you can install Whisper here:
 
@@ -37,6 +44,6 @@ If you need to update it in the future, you can use:
 
     git pull
 
-Now you can add the .lua files in REAPER actions list and run it. First time it will copy the settings file to your custom settings folder for the script. and open it for editing. You have to change the path to the path where you installed Whisper. And that's it. It is installed and running and it should work now.
+Now you can add the .lua files in REAPER actions list and run it. First time it will copy the settings file to your custom settings folder for the script. and open it for editing. You have to change the whisperbin inside the settings file to point to the whisper executable. On windows you should include the .exe extension. And that's it. It is installed and it should work.
 
 

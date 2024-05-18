@@ -2,6 +2,10 @@
 # ReaWhisper - Changelog (What's new)
 ---------------------------------------------------------------------------------------
 
+## v0.1.1 (2024-05-18)
+	* changes in settings to include the full path to the executable. 
+	  For windows, you must include the .exe extension. 
+
 ## v0.1.0 (2024-05-17)
   + Basic script to run OpenAI Whisper from REAPER.
 	Simple version with manual options from settings.lua.txt file.
