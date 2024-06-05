@@ -4,7 +4,7 @@
 * Author URI: https://reaper.hector-corcin.com
 * Repository URI: https://github.com/HeDaScripts/ReaWhisper
 * Licence: MIT
-* Version: 0.1.1
+* Version: 0.2.0
 
 --]]
 
@@ -82,11 +82,17 @@ end
 
 function print(text)
 	-- print to console window
-	reaper.ShowConsoleMsg("\n")
-	if text then
-		reaper.ShowConsoleMsg(text)
+	if text == true then
+		reaper.ShowConsoleMsg("\ntrue ")
+	elseif text == false then
+		reaper.ShowConsoleMsg("\nfalse ")
 	else
-		reaper.ShowConsoleMsg("nil")
+		reaper.ShowConsoleMsg("\n")
+		if text then
+			reaper.ShowConsoleMsg(text)
+		else
+			reaper.ShowConsoleMsg("nil")
+		end
 	end
 end
 
@@ -150,7 +156,7 @@ function ImportSRT(itemsrt)
 	-- very old function to import srt files into REAPER. It probably needs to be done better.
 	items = {}
 	lines = {}
-	sourcefilename, source_path, srtfile, offset = Path_FromItem(itemsrt)
+	sourcefilename, source_file, source_path, srtfile, offset = Path_FromItem(itemsrt)
 	local itemstart = reaper.GetMediaItemInfo_Value(itemsrt, "D_POSITION")
 	itemstart = itemstart - offset
 	local itemlength = reaper.GetMediaItemInfo_Value(itemsrt, "D_LENGTH")
@@ -193,6 +199,17 @@ function ImportSRT(itemsrt)
 	end
 end
 
+function get_temp_file(source_path, source_file)
+	local tempfile = source_path .. "srt/" .. source_file .. ".wav"
+	return tempfile
+end
+
+function remove_temp_file(source_path, source_file)
+	local tempfile = source_path .. "srt/" .. source_file .. ".wav"
+	-- if reaper.file_exists(tempfile) then
+	-- os.remove(tempfile)
+	-- end
+end
 
 function Path_FromItem(item)
 	if item then
@@ -201,35 +218,33 @@ function Path_FromItem(item)
 			local PCMsource = reaper.GetMediaItemTake_Source(take)
 			local sourcefilename = reaper.GetMediaSourceFileName(PCMsource)
 			local source_path, source_file, source_extension = GetFilename(sourcefilename)
-			local srtfile = source_path .. output_format.."/" .. source_file .. "." .. output_format
+			local tempfile = get_temp_file(source_path, source_file)
+			local srtfile = tempfile .. "." .. output_format
+			if not whispercpp then
+				srtfile = source_path .. output_format .. "/" .. source_file .. "." .. output_format
+			end
 			local offset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
-			return sourcefilename, source_path, srtfile, offset
+			return sourcefilename, source_file, source_path, srtfile, offset
 		end
 	end
 	return nil, nil, nil, nil
 end
 
-
-function whisper(item)
-	local sourcefilename, source_path, srtfile, offset = Path_FromItem(item)
-	local generate = true
-	if srtfile then
-		if reaper.file_exists(srtfile) then
-			generate = false
-			local yesno = reaper.ShowMessageBox(".srt file found. Regenerate?", "Already transcribed", 4)
-			if yesno == 6 then -- yes
-				generate = true
-				os.remove(srtfile)
-			end
-		end
-	end
-		
-	-- run whisper command
-	command = '"' .. whisperbin .. '" "'
+function whisper_command(sourcefilename, source_file, source_path)
+	local command = '"' .. whisperbin .. '" "'
 		.. sourcefilename .. '"'
 		.. ' --model ' .. model
 		.. ' --output_format ' .. output_format
 		.. ' --output_dir "' .. source_path .. "srt" .. '"'
+	if custom_args and custom_args ~= "" then
+		if string.sub(custom_args, 1, 1) ~= " " then
+			custom_args = " " .. custom_args
+		end
+		command = command .. custom_args
+	end
+	if task then
+		command = command .. ' --task ' .. task
+	end
 	if language and language ~= "None" then
 		command = command .. ' --language ' .. language
 	end
@@ -254,6 +269,76 @@ function whisper(item)
 	if append_punctuations and append_punctuations ~= "" then
 		command = command .. ' --append_punctuations ' .. append_punctuations
 	end
+	return command
+end
+
+function whispercpp_command(sourcefilename, source_file, source_path)
+	local tempfile = get_temp_file(source_path, source_file)
+	local whispercpp_path, whispercpp_file, whispercpp_extension = GetFilename(whispercpp)
+	local modelpath = whispercpp_path .. 'models/ggml-' .. model .. '.bin'
+	local command = '"' .. whispercpp .. '"'
+		.. ' -pc'
+		.. ' -m "' .. modelpath .. '"'
+		.. ' -osrt'
+		.. ' -f "' .. tempfile .. '"'
+
+	if custom_args and custom_args ~= "" then
+		if string.sub(custom_args, 1, 1) ~= " " then
+			custom_args = " " .. custom_args
+		end
+		command = command .. custom_args
+	end
+	if task then
+		if task == "translate" then
+			command = command .. ' -tr'
+		end
+	end
+	if language and language ~= "None" then
+		command = command .. ' -l ' .. language
+	end
+	if max_line_width and max_line_width ~= "None" then
+		command = command .. ' -ml ' .. max_line_width
+	end
+	if durationms > 0 then
+		command = command .. ' -ot ' .. offsetms
+		command = command .. ' -d ' .. durationms
+	end
+	return command
+end
+
+function whisper(item)
+	local sourcefilename, source_file, source_path, srtfile, offset = Path_FromItem(item)
+	local generate = true
+	if srtfile then
+		if reaper.file_exists(srtfile) then
+			generate = false
+			local yesno = reaper.ShowMessageBox(".srt file found. Regenerate?", "Already transcribed", 4)
+			if yesno == 6 then -- yes
+				generate = true
+				os.remove(srtfile)
+			end
+		end
+	end
+		
+	local command
+	local tempfile
+	print_debug(whispercpp)
+	if whispercpp then
+		-- run whisper cpp command
+		-- temp file
+		if generate then
+			print_debug("_______________ running ffmpeg to create temp file _______________")
+			tempfile = get_temp_file(source_path, source_file)
+			local ffmpegcommand = 'ffmpeg -y -i "' ..
+			sourcefilename .. '" -ar 16000 -ac 1 -c:a pcm_s16le "' .. tempfile .. '"'
+			print_debug(ffmpegcommand)
+			local response = os.execute(ffmpegcommand) -- run ffmpeg
+			command = whispercpp_command(sourcefilename, source_file, source_path)
+		end
+	else
+		-- run whisper command
+		command = whisper_command(sourcefilename, source_file, source_path)
+	end
 	if generate then
 		if showdebug then 
 			print_debug("_______________ running command _______________")
@@ -261,12 +346,28 @@ function whisper(item)
 		end
 		error = false
 		timestart = reaper.time_precise()
-		if reaper.file_exists(whisperbin) then 
-			local response = reaper.ExecProcess(command, -2) -- run external command
+		if not whispercpp then
+			if reaper.file_exists(whisperbin) then
+				local response = reaper.ExecProcess(command, -2) -- run external command
+			else
+				print_debug("whisper path: " .. whisperbin)
+				reaper.MB("Cannot find the whisper executable. Check path in the settings file.", "Error", 0)
+				error = true
+				DeleteItem(transcription_track, itemtranscribing)
+			end
 		else
-			reaper.MB("Cannot find the whisper executable. Check path in the settings file.", "Error", 0)
-			error = true
-			DeleteItem(transcription_track, itemtranscribing)
+			if reaper.file_exists(whispercpp) then
+				print_debug("running whisper.cpp...")
+				print_debug(tempfile)
+				if reaper.file_exists(tempfile) then
+					reaper.ExecProcess(command, -2) -- run external command
+				end
+			else
+				print_debug("whispercpp path: " .. whispercpp)
+				reaper.MB("Cannot find the whisper.cpp executable. Check path in the settings file.", "Error", 0)
+				error = true
+				DeleteItem(transcription_track, itemtranscribing)
+			end
 		end
 		if showdebug then 
 			print_debug("_____________ wait for srt file... _____________")
@@ -293,13 +394,18 @@ end
 
 
 function loop()
-	sourcefilename, source_path, srtfile, offset = Path_FromItem(itemtotranscribe)
+	sourcefilename, source_file, source_path, srtfile, offset = Path_FromItem(itemtotranscribe)
 	if srtfile and output_format == "srt" then
 		if reaper.file_exists(srtfile) then
 			-- the file is generated, insert it as item notes.
 			InsertSRT(srtfile, offset)
 			local timeseconds = reaper.time_precise() - timestart
 			print_debug("done in " .. string.format("%.2f", timeseconds) .. " seconds.")
+			remove_temp_file(source_path, source_file)
+			if timeselection then
+				-- restore time selection
+				reaper.GetSet_LoopTimeRange(true, false, ts, te, false)
+			end
 		else
 			-- wait for srt file to be generated.
 			-- TODO: fix performance
@@ -334,11 +440,33 @@ function init()
 			local take = reaper.GetActiveTake(itemtotranscribe)
 			if take then
 				local offset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+
+				-- get time selection
+				timeselection = true
+				ts, te = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+				if (ts == 0 and te == 0) then
+					timeselection = false
+				end
+				offsetms = 0
+				durationms = 0
+				if timeselection then
+					offsetms = math.floor((ts - itemstart + offset) * 1000.0)
+					durationms = math.floor((te - ts) * 1000.0)
+				end
+
+				-- create temp item to indicate where it is transcribing
 				reaper.SetOnlyTrackSelected(transcription_track)
-				itemtranscribing = CreateTextItem(itemstart - offset, itemend, "Transcribing...")
+				if timeselection then
+					itemtranscribing = CreateTextItem(ts, te, "Transcribing selection...")
+				else
+					itemtranscribing = CreateTextItem(itemstart - offset, itemend, "Transcribing...")
+				end
 				reaper.SetMediaItemSelected(itemtotranscribe, true)
+
+				-- run whisper
 				whisper(itemtotranscribe)
 			end
+			
 		else
 			reaper.MB("Can't find the track to insert the text into", "Problem", 0)	
 		end

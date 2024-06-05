@@ -2,6 +2,15 @@
 # ReaWhisper - Changelog (What's new)
 ---------------------------------------------------------------------------------------
 
+## v0.2.0 (2024-06-05)
+	+ Whisper.cpp support. To enable define the path to the whispercpp executable 
+	in the settings
+	+ Time selection support. If a time selection is defined, only process that 
+	part of the file (when using whispercpp)
+	+ Task parameter: task parameter in settings to transcribe or translate to english.
+	(when using a multilingual model)
+	+ custom args: add any additional parameters you would need.
+
 ## v0.1.1 (2024-05-18)
 	* changes in settings to include the full path to the executable. 
 	  For windows, you must include the .exe extension. 
