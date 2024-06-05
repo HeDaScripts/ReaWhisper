@@ -206,9 +206,9 @@ end
 
 function remove_temp_file(source_path, source_file)
 	local tempfile = source_path .. "srt/" .. source_file .. ".wav"
-	-- if reaper.file_exists(tempfile) then
-	-- os.remove(tempfile)
-	-- end
+	if reaper.file_exists(tempfile) then
+		os.remove(tempfile)
+	end
 end
 
 function Path_FromItem(item)
