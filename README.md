@@ -9,42 +9,47 @@ You need to install OpenAI Whisper or Whisper.cpp. In my tests, whisper.cpp runs
 TO install Whisper.cpp you can follow the instructions in their page: 
 https://github.com/ggerganov/whisper.cpp
 
-go to the directory where you want to install it and run:
+- Go to the directory where you want to install it and run:
     
-    git clone https://github.com/ggerganov/whisper.cpp.git
+        git clone https://github.com/ggerganov/whisper.cpp.git
 
-This downloads the source code into a whisper.cpp folder. Or if you don't have git, just download the zip file from github and extract it.
+    This downloads the source code into a whisper.cpp folder. Or if you don't have git, just download the zip file from github and extract it.
 
-Download the gglm bin models from here https://huggingface.co/ggerganov/whisper.cpp/tree/main
+- Download the gglm bin models from here https://huggingface.co/ggerganov/whisper.cpp/tree/main
 and copy them to the models directory inside whisper.cpp.  You don't need to download all the models, only the ones to be used.
 
-Alternatively you can go to the whisper.cpp directory and run (base.en is a model name example):
+    Alternatively you can go to the whisper.cpp directory and run (base.en is a model name example):
     
-    bash ./models/download-ggml-model.sh base.en
+        bash ./models/download-ggml-model.sh base.en
 
-Compile it, check the whisper cpp readme for more options
+- Compile it, check the whisper cpp readme for more options
 
-Linux:
-    # build the main example
-    make
-
-    # test
-    ./main -h
-
-Windows:
-You need [cmake](https://cmake.org/download/), and inside whisper.cpp folder run:
-    # build the main example (for CPU)
-    cmake . --fresh
-    msbuild ALL_BUILD.vcxproj /p:Configuration=Release
-This will create whisper.cpp/bin/Release/main.exe and whisper.dll. Go to the Release folder (or move both files to the root) and run:
-    # test
-    main -h
+    Linux:
+    
+        # build the main example
+        make
+    
+        # test
+        ./main -h
+    
+    Windows:
+    
+    You need [cmake](https://cmake.org/download/), and inside whisper.cpp folder run:
+    
+        # build the main example (for CPU)
+        cmake . --fresh
+        msbuild ALL_BUILD.vcxproj /p:Configuration=Release
+        
+    This will create whisper.cpp/bin/Release/main.exe and whisper.dll. Go to the Release folder (or move both files to the root) and run:
+    
+        # test
+        main -h
 
 If the main -h command gives you the options information, then it works and it is ready.
 
-To convert the audio files into the audio whisper.cpp reads, you also need to install ffmpeg package in your system. install it from your favorite package manager and test it
+- To convert the audio files into the audio whisper.cpp reads, you also need to install ffmpeg package in your system. install it from your favorite package manager and test it
 
-    ffmpeg -h 
+        ffmpeg -h 
 
 Now you only need to install ReaWhisper and configure the settings file and set the whispercpp to point to the main executable in your whisper.cpp directory.
 
