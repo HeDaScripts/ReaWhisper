@@ -61,6 +61,7 @@ else
 		reaper.MB("First time use. Configure your settings file.", "Info", 0)
 		first_time = true
 		-- just open the settings lua file for manual editing for now
+		local OS = reaper.GetOS()
 		if OS == "OSX32" or OS == "OSX64" or OS == "macOS-arm64" then
 			os.execute('open "" "' .. customsettingsfile .. '"')
 		elseif OS == "Win32" or OS == "Win64" then
@@ -200,12 +201,12 @@ function ImportSRT(itemsrt)
 end
 
 function get_temp_file(source_path, source_file)
-	local tempfile = source_path .. "srt/" .. source_file .. ".wav"
+	local tempfile = source_path .. output_format .. "/" .. source_file .. ".wav"
 	return tempfile
 end
 
 function remove_temp_file(source_path, source_file)
-	local tempfile = source_path .. "srt/" .. source_file .. ".wav"
+	local tempfile = source_path .. output_format .. "/" .. source_file .. ".wav"
 	if reaper.file_exists(tempfile) then
 		os.remove(tempfile)
 	end
@@ -231,11 +232,14 @@ function Path_FromItem(item)
 end
 
 function whisper_command(sourcefilename, source_file, source_path)
+	sourcefilename = pathtoWindows(sourcefilename)
+	source_path = pathtoWindows(source_path)
+
 	local command = '"' .. whisperbin .. '" "'
 		.. sourcefilename .. '"'
 		.. ' --model ' .. model
 		.. ' --output_format ' .. output_format
-		.. ' --output_dir "' .. source_path .. "srt" .. '"'
+		.. ' --output_dir "' .. source_path .. output_format .. '"'
 	if custom_args and custom_args ~= "" then
 		if string.sub(custom_args, 1, 1) ~= " " then
 			custom_args = " " .. custom_args
@@ -272,15 +276,26 @@ function whisper_command(sourcefilename, source_file, source_path)
 	return command
 end
 
+function pathtoWindows(path)
+	local OS = reaper.GetOS()
+	if OS == "Win32" or OS == "Win64" then
+		path = path:gsub("/", "\\")
+	end
+	return path
+end
 function whispercpp_command(sourcefilename, source_file, source_path)
 	local tempfile = get_temp_file(source_path, source_file)
 	local whispercpp_path, whispercpp_file, whispercpp_extension = GetFilename(whispercpp)
 	local modelpath = whispercpp_path .. 'models/ggml-' .. model .. '.bin'
+	tempfile = pathtoWindows(tempfile)
+	modelpath = pathtoWindows(modelpath)
+	if not reaper.file_exists(tempfile) then 
+		return ""
+	end
 	local command = '"' .. whispercpp .. '"'
 		.. ' -pc'
 		.. ' -m "' .. modelpath .. '"'
 		.. ' -osrt'
-		.. ' -f "' .. tempfile .. '"'
 
 	if custom_args and custom_args ~= "" then
 		if string.sub(custom_args, 1, 1) ~= " " then
@@ -303,6 +318,9 @@ function whispercpp_command(sourcefilename, source_file, source_path)
 		command = command .. ' -ot ' .. offsetms
 		command = command .. ' -d ' .. durationms
 	end
+
+	command = command .. ' -f "' .. tempfile .. '"'
+
 	return command
 end
 
@@ -319,21 +337,31 @@ function whisper(item)
 			end
 		end
 	end
-		
+	local error = false
 	local command
 	local tempfile
 	print_debug(whispercpp)
 	if whispercpp then
 		-- run whisper cpp command
+		-- makesure srt subdirectory exists
+		reaper.RecursiveCreateDirectory(source_path .. output_format, 0) -- create srt directory if needed
 		-- temp file
 		if generate then
 			print_debug("_______________ running ffmpeg to create temp file _______________")
 			tempfile = get_temp_file(source_path, source_file)
-			local ffmpegcommand = 'ffmpeg -y -i "' ..
-			sourcefilename .. '" -ar 16000 -ac 1 -c:a pcm_s16le "' .. tempfile .. '"'
+			local ffmpegcommand = 'ffmpeg -y -i "' .. sourcefilename .. '" -ar 16000 -ac 1 -c:a pcm_s16le "' .. tempfile .. '"'
 			print_debug(ffmpegcommand)
 			local response = os.execute(ffmpegcommand) -- run ffmpeg
+			if not reaper.file_exists(tempfile) then 
+				reaper.MB("Error generating temp wav file in srt directory with ffmpeg", "Error", 0)
+				error = true
+			end
+
 			command = whispercpp_command(sourcefilename, source_file, source_path)
+			if command == "" then 
+				reaper.MB("Error, can't find temp wav file in srt directory", "Error", 0)
+				error = true
+			end
 		end
 	else
 		-- run whisper command
@@ -344,7 +372,7 @@ function whisper(item)
 			print_debug("_______________ running command _______________")
 			print_debug(command)
 		end
-		error = false
+		
 		timestart = reaper.time_precise()
 		if not whispercpp then
 			if reaper.file_exists(whisperbin) then
@@ -369,10 +397,11 @@ function whisper(item)
 				DeleteItem(transcription_track, itemtranscribing)
 			end
 		end
-		if showdebug then 
-			print_debug("_____________ wait for srt file... _____________")
-		end
+		
 		if not error then 
+			if showdebug then 
+				print_debug("_____________ wait for srt file... _____________")
+			end
 			loop() -- enter a loop to check if srt file is generated
 		end
 	else

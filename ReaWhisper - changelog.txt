@@ -2,6 +2,13 @@
 # ReaWhisper - Changelog (What's new)
 ---------------------------------------------------------------------------------------
 
+## v0.2.2 (2024-07-06)
+	# fix create srt directory if needed
+	# fix for Windows paths using \
+
+## v0.2.1 (2024-06-05)
+	# fix temp file removal
+
 ## v0.2.0 (2024-06-05)
 	+ Whisper.cpp support. To enable define the path to the whispercpp executable 
 	in the settings

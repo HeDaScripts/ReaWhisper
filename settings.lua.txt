@@ -1,7 +1,7 @@
 -- set whispercpp if you want to use whisper.cpp instead of original python whisper
 -- (uncommend removing the -- and set it to the path where the main executable is installed)
 -- download the ggml models from: https://huggingface.co/ggerganov/whisper.cpp/tree/main
--- put models in the whisper.cpp/models directory. 
+-- put models in a models subdirectory where the executable is. with ggml- prefix and .bin extension
 -- for example: whisper.cpp/models/ggml-tiny.en.bin
     
     --whispercpp = "/home/user/whisper.cpp/main"
